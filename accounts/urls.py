@@ -1,9 +1,24 @@
 from django.urls import path, include
+from django.views.generic import TemplateView
 
-from . import views
+
+from .views import followingfunc, profilefunc, goodfunc, badfunc, destoryer, followerfunc, followeefunc
 
 app_name = 'accounts'
 urlpatterns = [
+    path('profile/<str:username>', profilefunc, name='profile'),
+    path('good/<int:pk>/<str:author>', goodfunc, name='good'),
+    path('bad/<int:pk>/<str:author>', badfunc, name='bad'),
+    path('following/<str:followeename>', followingfunc, name='following'),
+    path('follower/<str:username>', followerfunc, name='follower'),
+    path('followee/<str:username>', followeefunc, name='followee'),
+    
+    
+    #以下は触らない
+    path('destory/', destoryer, name='destory'),
+    path('test/', TemplateView.as_view(template_name='accounts/profile.html'), name='test'),
+    
+    
     # path('', views.WelcomeView.as_view(), name='welcome'),
     # path('signup/', views.SignUpView.as_view(), name='signup'),
     # path('home/', views.HomeView.as_view(), name='home'),

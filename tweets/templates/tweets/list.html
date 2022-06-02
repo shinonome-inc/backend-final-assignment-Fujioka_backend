@@ -1,0 +1,63 @@
+{% extends 'tweets/base.html' %}
+
+{% block header %}
+<div class="container">
+    <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom">
+      <a href={%url 'tweets:list' %} class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
+        <svg class="bi me-2" width="40" height="32"><use xlink:href="#bootstrap"/></svg>
+        <span class="fs-4">TWEET TOP</span>
+      </a>
+
+      <ul class="nav nav-pills">
+        <li class="nav-item"><a href={%url 'tweets:list' %} class="nav-link active" aria-current="page">TOP</a></li>
+        <li class="nav-item"><a href={%url 'accounts:profile' user.username%} class="nav-link">Profile</a></li>
+        <li class="nav-item"><a href={%url 'welcome:logout'%} class="nav-link">Log Out</a></li>
+        <li class="nav-item"><a href={%url 'welcome:signup'%} class="nav-link">Sign Up</a></li>
+      </ul>
+    </header>
+</div>
+{% endblock header %}
+
+
+{% block content %}
+{% if user.is_authenticated %}
+
+<div class="container">
+    <a href={% url 'tweets:create' %} class="text-decoration-none" tabindex="-1" role="button">
+        <div class="fs-2 mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-plus-square" viewBox="0 0 16 16">
+                <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/>
+                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+            </svg>
+            New Tweet
+        </div>
+    </a>
+        {% for tweet in tweet_list %}
+        <div class="alert alert-light  pt-0 pb-0" role='alert'>
+            <a href={%url 'accounts:profile' tweet.author%} class="nav-link">
+                <p class="fs-5 text-decoration-none">> {{tweet.author}}</p>
+            </a>
+            <a href={%url 'tweets:detail' tweet.pk %} class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
+               <svg class="bi me-2" width="40" height="32"><use xlink:href="#bootstrap"/></svg>
+                <span class="fs-6 pb-3">{{tweet.text}}</span>
+            </a>
+            <a class='text-decoration-none ms-5' href={% url 'tweets:good' tweet.pk %} role="button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-heart" viewBox="0 0 16 16">
+                    <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01L8 2.748zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143c.06.055.119.112.176.171a3.12 3.12 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15z"/>
+                </svg>
+                &nbsp; {{tweet.good}}
+            </a>
+            <a class="text-decoration-none ms-5" href={% url 'tweets:bad' tweet.pk %} role="button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-heartbreak" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8.867 14.41c13.308-9.322 4.79-16.563.064-13.824L7 3l1.5 4-2 3L8 15a38.094 38.094 0 0 0 .867-.59Zm-.303-1.01c6.164-4.4 6.91-7.982 6.22-9.921C14.031 1.37 11.447.42 9.587 1.368L8.136 3.18l1.3 3.468a1 1 0 0 1-.104.906l-1.739 2.608.971 3.237Zm-1.25 1.137a36.027 36.027 0 0 1-1.522-1.116C-5.077 4.97 1.842-1.472 6.454.293c.314.12.618.279.904.477L5.5 3 7 7l-1.5 3 1.815 4.537Zm-2.3-3.06C.895 7.797.597 4.875 1.308 3.248c.756-1.73 2.768-2.577 4.456-2.127L4.732 2.36a1 1 0 0 0-.168.991L5.91 6.943l-1.305 2.61a1 1 0 0 0-.034.818l.442 1.106Z"/>
+                </svg>
+            </a>
+            <hr/>
+        </div>
+    {% endfor %}
+
+</div>
+{% else %}
+<a href="{% url 'login' %}">please login</a>
+{% endif %}
+{% endblock content %}
