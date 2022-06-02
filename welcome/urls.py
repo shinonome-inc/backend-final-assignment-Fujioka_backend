@@ -1,9 +1,13 @@
 from django.urls import path
-from django.views.generic import TemplateView
+
+from .views import loginfunc, logoutfunc, signupfunc
 
 from . import views
 
 app_name = 'welcome'
 urlpatterns = [
-    path('', TemplateView.as_view(template_name='welcome/index.html')),
+    path('', signupfunc, name='signup'),
+    path('login/', loginfunc, name='login'),
+    path('logout', logoutfunc, name='logout'),
+    
 ]
