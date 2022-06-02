@@ -2,7 +2,7 @@ from django.urls import path
 
 from .views import loginfunc, logoutfunc, signupfunc
 
-from . import views
+
 
 app_name = 'welcome'
 urlpatterns = [

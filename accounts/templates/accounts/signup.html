@@ -1,0 +1,30 @@
+{% extends 'accounts/signupbase.html' %} 
+{% load static %}
+
+{% block customcss %}
+<link rel="stylesheet" href="{% static 'welcome/style.css' %}">
+{% endblock %}
+
+
+{% block content %}
+
+<body class="text-center">
+  <main class="form-signin">
+    <form method="POST">
+      {% csrf_token %}
+
+      <h1 class="h3 mb-3 fw-normal">Sign Up</h1>
+      <div class="form-floating">
+          {{form.as_p}}
+      </div>
+
+      <button class="w-100 btn btn-lg btn-primary" type="submit">
+        Sign Up
+      </button>
+      <p class="mt-5 mb-3 text-muted">&copy; Fujioka</p>
+    </form>
+    <a href="{% url 'welcome:login' %}">Log In</a>
+  </main>
+</body>
+
+{% endblock content %}
