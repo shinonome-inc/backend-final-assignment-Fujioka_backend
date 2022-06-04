@@ -1,13 +1,8 @@
 from django.shortcuts import render
 from django.shortcuts import render, redirect
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login, authenticate
 
-
 from .forms import CreateForm
-
-
-
 
 
 def signupfunc(request):
@@ -20,8 +15,7 @@ def signupfunc(request):
             user = authenticate(username=username, password=raw_password)
             login(request, user)
             return redirect('tweets:test')
-    else :
-        form = UserCreationForm()
+    else:
+        form = CreateForm()
     return render(request, 'accounts/signup.html', {'form': form})
-
 
