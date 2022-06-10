@@ -1,3 +1,4 @@
+import re
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import redirect, render
@@ -7,6 +8,9 @@ from django.contrib.auth.decorators import login_required
 
 def signupfunc(request):
     return redirect('accounts:signup')
+
+def welcomefunc(request):
+    return render(request, 'welcome/welcome.html')
 
 
 def loginfunc(request):
