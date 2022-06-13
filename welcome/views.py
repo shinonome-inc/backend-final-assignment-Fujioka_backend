@@ -20,8 +20,8 @@ def loginfunc(request):
             login(request, user)
             return redirect('tweets:test')
         else:
-            return render(request, 'welcome/login.html', {'error':'This user is not exitst. Please try anothor name or passwrod.'})
-        
+            return render(request, 'welcome/login.html', {'error': 'This user is not exitst. Please try anothor name or passwrod.'})
+
     return render(request, 'welcome/login.html', {})
 
 
@@ -29,4 +29,3 @@ def loginfunc(request):
 def logoutfunc(request):
     logout(request)
     return redirect('welcome:login')
-
