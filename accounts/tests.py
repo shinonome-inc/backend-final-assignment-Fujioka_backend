@@ -1,10 +1,5 @@
-from distutils.log import error
-import turtle
-from urllib import response
-from webbrowser import get
 from django.test import TestCase, Client
 from django.urls import reverse, resolve
-import pprint
 
 from welcome.views import loginfunc
 
