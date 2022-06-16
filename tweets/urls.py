@@ -1,8 +1,10 @@
 from django.urls import path
 from django.views.generic import TemplateView
 
+from tweets.views import testfunc
+
 
 app_name = 'tweets'
 urlpatterns = [
-    path('test/', TemplateView.as_view(template_name='tweets/test.html'), name='test'),
+    path('test/', testfunc, name='test'),
 ]

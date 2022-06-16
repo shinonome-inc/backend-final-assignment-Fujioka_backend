@@ -160,6 +160,7 @@ class TestLoginView(TestCase):
             'password': self.password}
         self.client.post(self.signup_url, {
             'username': self.username, 'password1': self.password, 'password2': self.password})
+        self.client.logout()
 
     def test_success_get(self):
         self.assertEqual(resolve(self.login_url).func, loginfunc)
@@ -171,9 +172,13 @@ class TestLoginView(TestCase):
         login_response = self.client.post(self.login_url, self.credentials)
         self.assertEqual(login_response.status_code, 302)
         self.assertEqual(login_response.url, self.redirect_url)
+        
         login_response = self.client.login(
             username=self.username, password=self.password)
         self.assertTrue(login_response)
+        
+        get_response = self.client.get(self.redirect_url)
+        self.assertEqual(get_response.status_code, 200)
 
     def test_failure_post_with_not_exists_user(self):
         login_response = self.client.login(
@@ -184,6 +189,10 @@ class TestLoginView(TestCase):
             self.login_url, {'username': self.username+'A', 'password': self.password})
         self.assertEqual(login_response.context.get(
             'error'), 'This user is not exitst. Please try anothor name or passwrod.')
+        
+        get_response = self.client.get(self.redirect_url)
+        self.assertNotEqual(get_response.status_code, 200)
+        
 
     def test_failure_post_with_empty_password(self):
         login_response = self.client.login(
@@ -194,6 +203,9 @@ class TestLoginView(TestCase):
             self.login_url, {'username': self.username+'A', 'password': self.password})
         self.assertEqual(login_response.context.get(
             'error'), 'This user is not exitst. Please try anothor name or passwrod.')
+        
+        get_response = self.client.get(self.redirect_url)
+        self.assertNotEqual(get_response.status_code, 200)
 
 
 class TestLogoutView(TestCase):
@@ -202,6 +214,7 @@ class TestLogoutView(TestCase):
         self.login_url = reverse('welcome:login')
         self.logout_url = reverse('welcome:logout')
         self.signup_url = reverse('accounts:signup')
+        self.test_url = reverse('tweets:test')
         self.username = 'testuser'
         self.password = 'testpassword'
         self.client.post(self.signup_url, {
@@ -210,11 +223,17 @@ class TestLogoutView(TestCase):
     def test_success_get(self):
         login_response = self.client.login(
             username=self.username, password=self.password)
-
         self.assertEqual(login_response, True)
+        get_response = self.client.get(self.test_url)
+        self.assertEqual(get_response.status_code, 200)
+        
         logout_response = self.client.get(self.logout_url)
         self.assertEqual(logout_response.status_code, 302)
         self.assertEqual(logout_response.url, self.login_url)
+        get_response = self.client.get(self.test_url)
+        self.assertNotEqual(get_response.status_code, 200)
+        
+        # test_get_request = self.client.get()
 
 
 class TestUserProfileView(TestCase):
