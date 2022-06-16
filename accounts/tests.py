@@ -1,8 +1,10 @@
 from distutils.log import error
 import turtle
 from urllib import response
+from webbrowser import get
 from django.test import TestCase, Client
 from django.urls import reverse, resolve
+import pprint
 
 from welcome.views import loginfunc
 
@@ -155,6 +157,7 @@ class TestLoginView(TestCase):
         self.client = Client()
         self.login_url = reverse('welcome:login')
         self.signup_url = reverse('accounts:signup')
+        self.redirect_url = reverse('tweets:test')
         self.username = 'testuser'
         self.password = 'testpassword'
         self.credentials = {
@@ -172,6 +175,10 @@ class TestLoginView(TestCase):
     def test_success_post(self):
         login_response = self.client.post(self.login_url, self.credentials)
         self.assertEqual(login_response.status_code, 302)
+        self.assertEqual(login_response.url, self.redirect_url)
+        login_response = self.client.login(
+            username=self.username, password=self.password)
+        self.assertTrue(login_response)
 
     def test_failure_post_with_not_exists_user(self):
         login_response = self.client.login(
@@ -208,6 +215,7 @@ class TestLogoutView(TestCase):
     def test_success_get(self):
         login_response = self.client.login(
             username=self.username, password=self.password)
+
         self.assertEqual(login_response, True)
         logout_response = self.client.get(self.logout_url)
         self.assertEqual(logout_response.status_code, 302)

@@ -18,4 +18,3 @@ def signupfunc(request):
     else:
         form = CreateForm()
     return render(request, 'accounts/signup.html', {'form': form})
-
