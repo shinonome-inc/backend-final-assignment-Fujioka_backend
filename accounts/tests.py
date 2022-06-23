@@ -1,5 +1,6 @@
 from django.test import TestCase, Client
 from django.urls import reverse, resolve
+from django.contrib.auth import _get_user_session_key
 
 from welcome.views import loginfunc
 
@@ -179,6 +180,8 @@ class TestLoginView(TestCase):
         
         get_response = self.client.get(self.redirect_url)
         self.assertEqual(get_response.status_code, 200)
+        
+        self.assertTrue(_get_user_session_key(self.client))
 
     def test_failure_post_with_not_exists_user(self):
         login_response = self.client.login(
@@ -193,6 +196,13 @@ class TestLoginView(TestCase):
         get_response = self.client.get(self.redirect_url)
         self.assertNotEqual(get_response.status_code, 200)
         
+        session_key_confirm = True
+        try :
+            self.assertTrue(_get_user_session_key(self.client))
+            session_key_confirm = False
+            self.assertTrue(session_key_confirm)
+        except:
+            self.assertTrue(session_key_confirm)
 
     def test_failure_post_with_empty_password(self):
         login_response = self.client.login(
@@ -206,6 +216,15 @@ class TestLoginView(TestCase):
         
         get_response = self.client.get(self.redirect_url)
         self.assertNotEqual(get_response.status_code, 200)
+        
+        session_key_confirm = True
+        try :
+            self.assertTrue(_get_user_session_key(self.client))
+            session_key_confirm = False
+            self.assertTrue(session_key_confirm)
+        except:
+            self.assertTrue(session_key_confirm)
+        
 
 
 class TestLogoutView(TestCase):
@@ -233,7 +252,13 @@ class TestLogoutView(TestCase):
         get_response = self.client.get(self.test_url)
         self.assertNotEqual(get_response.status_code, 200)
         
-        # test_get_request = self.client.get()
+        session_key_confirm = True
+        try :
+            self.assertTrue(_get_user_session_key(self.client))
+            session_key_confirm = False
+            self.assertTrue(session_key_confirm)
+        except:
+            self.assertTrue(session_key_confirm)
 
 
 class TestUserProfileView(TestCase):
