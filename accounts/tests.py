@@ -291,4 +291,3 @@ class TestFollowingListView(TestCase):
 class TestFollowerListView(TestCase):
     def test_success_get(self):
         pass
-    
