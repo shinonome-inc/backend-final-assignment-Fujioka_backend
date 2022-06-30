@@ -1,10 +1,11 @@
 from django.urls import path
-from django.views.generic import TemplateView
 
-from tweets.views import testfunc
+from tweets.views import TweetCreate, detailfunc, listfunc
 
 
 app_name = 'tweets'
 urlpatterns = [
-    path('test/', testfunc, name='test'),
+    path('', listfunc, name='list'),
+    path('create/', TweetCreate.as_view(), name='create'),
+    path('detail/<int:pk>', detailfunc, name='detail'),
 ]
