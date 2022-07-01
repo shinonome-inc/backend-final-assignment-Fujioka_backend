@@ -1,0 +1,25 @@
+{% extends 'tweets/base.html' %}
+
+{% block header %}
+{% include 'tweets/header.html' %}
+{% endblock header %}
+
+
+{% block content %}
+{% if user.is_authenticated %}
+
+<div class="container">
+    <div class="alert alert-light" role="alert">
+        <form action="" method='POST' enctype='multipart/form-data'>
+            {% csrf_token %}
+            <p class="fs-2">Delete Tweet? >>{{object}}</p>
+            <p class="fs-6">This cannot be undone and it will be remove from your profile and the timeline of any accounts that follow you.</p>
+            <input class="btn btn-outline-danger" type="submit" value="Delete">
+            <a class="btn btn-outline-dark" href={% url 'tweets:list' %} role="button" type='button'>Cancel</a>
+        </form>
+    </div>
+</div>
+{% else %}
+<a href="{% url 'login' %}">please login</a>
+{% endif %}
+{% endblock content %}
