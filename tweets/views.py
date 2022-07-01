@@ -42,6 +42,8 @@ def delete_confirmfunc(request, pk):
     author = request.GET['author']
     if client_user == author:
         return redirect('tweets:delete', pk = pk)
+    else :
+        return redirect('tweets:list')
 
 class TweetDelete(DeleteView):
     model = TweetModel

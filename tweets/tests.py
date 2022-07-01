@@ -52,20 +52,37 @@ class TestTweetDetailView(TestCase):
         self.test_tweet = TweetModel.objects.create(text = 'test1', author = self.username)
     
     def test_success_get(self):
-        response = self.client.get(self.detail_url)
+        response = self.client.get(self.detail_url, {'author': self.username})
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tweets/detail.html')
 
 
 class TestTweetDeleteView(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.username = 'testuser'
+        self.password = 'testpassword'
+        self.delete_url = reverse('tweets:delete', kwargs={'pk': 1})
+        self.delete_confirm_rul = reverse('tweets:delete_confirm', kwargs={'pk': 1})
+        self.create_url = reverse('tweets:create')
+        self.user = User.objects.create_user(self.username, '', self.password)
+        self.client.login(username = self.username, password = self.password)
+        self.client.post(self.create_url, {'text': 'text_text', 'author': self.username})
+    
     def test_success_post(self):
-        pass
+        response = self.client.post(self.delete_url)
+        self.assertFalse(TweetModel.objects.exists())
 
     def test_failure_post_with_not_exist_tweet(self):
-        pass
+        self.delete_url_error = reverse('tweets:delete', kwargs={'pk': 2})
+        response = self.client.post(self.delete_url_error)
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(TweetModel.objects.exists())
 
     def test_failure_post_with_incorrect_user(self):
-        pass
+        response = self.client.get(self.delete_confirm_rul, {'author': 'fakeuser'})
+        self.assertRedirects(response, reverse('tweets:list'), 302, 200)
+        self.assertTrue(TweetModel.objects.exists())
 
 
 class TestFavoriteView(TestCase):
