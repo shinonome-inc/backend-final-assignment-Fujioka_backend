@@ -2,10 +2,10 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView
+from django.views.generic.edit import BaseCreateView
 
 
 from tweets.models import TweetModel
-from accounts.models import User
 
 
 @login_required
@@ -21,8 +21,13 @@ def listfunc(request):
 class TweetCreate(CreateView):
     model = TweetModel
     template_name = 'tweets/create.html'
-    fields = ('text', 'author')
+    fields = ('text',)
     success_url = reverse_lazy('tweets:list')
+    
+    def post(self, request, *args, **kwargs):
+        self.object = TweetModel(author = self.request.user)
+        return super(BaseCreateView, self).post(request, *args, **kwargs)
+    
     
 @login_required
 def detailfunc(request, pk):
