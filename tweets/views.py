@@ -4,6 +4,7 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView
 from django.views.generic.edit import BaseCreateView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import UserPassesTestMixin
 
 
 from tweets.models import TweetModel
@@ -45,13 +46,18 @@ def detailfunc(request, pk):
 @login_required
 def delete_confirmfunc(request, pk):
     client_user = request.user.get_username()
-    author = request.GET['author']
+    # author = request.GET['author']
+    author = get_object_or_404(TweetModel, pk=pk).author.username
     if client_user == author:
         return redirect('tweets:delete', pk = pk)
     else :
         return redirect('tweets:list')
 
-class TweetDelete(LoginRequiredMixin, DeleteView):
+class TweetDelete(LoginRequiredMixin, UserPassesTestMixin,  DeleteView):
     model = TweetModel
     template_name = 'tweets/delete.html'
     success_url = reverse_lazy('tweets:list')
+    
+    def test_func(self):
+        self.object = self.get_object()
+        return self.object.author == self.request.user
