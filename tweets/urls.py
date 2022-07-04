@@ -1,10 +1,13 @@
 from django.urls import path
-from django.views.generic import TemplateView
 
-from tweets.views import testfunc
+from tweets.views import TweetCreate, TweetDelete, delete_confirmfunc, detailfunc, listfunc
 
 
 app_name = 'tweets'
 urlpatterns = [
-    path('test/', testfunc, name='test'),
+    path('', listfunc, name='list'),
+    path('create/', TweetCreate.as_view(), name='create'),
+    path('detail/<int:pk>', detailfunc, name='detail'),
+    path('delete_confirm/<int:pk>', delete_confirmfunc, name='delete_confirm'),
+    path('delete/<int:pk>', TweetDelete.as_view(), name='delete')
 ]

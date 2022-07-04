@@ -18,7 +18,7 @@ def loginfunc(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('tweets:test')
+            return redirect('tweets:list')
         else:
             return render(request, 'welcome/login.html', {'error': 'This user is not exitst. Please try anothor name or passwrod.'})
 

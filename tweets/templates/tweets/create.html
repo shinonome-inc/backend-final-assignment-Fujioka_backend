@@ -1,0 +1,29 @@
+{% extends 'tweets/base.html' %}
+
+{% block header %}
+{% include 'tweets/header.html' %}
+{% endblock header %}
+
+
+{% block content %}
+{% if user.is_authenticated %}
+
+<div class="container">
+    <div class="alert alert-light" role="alert">
+        <form action="" method='POST' enctype='multipart/form-data'>
+            {% csrf_token %}
+            <div>
+                {{user.username}}
+            </div>
+            {{form.text}}
+            <div>
+                <input type='submit' class="btn btn-outline-primary" value='create'>
+                <a class="btn-close ms-3 mt-3" href={% url 'tweets:list' %} role="button" type='button'></a>
+            </div>
+        </form>
+    </div>
+</div>
+{% else %}
+<a href="{% url 'login' %}">please login</a>
+{% endif %}
+{% endblock content %}

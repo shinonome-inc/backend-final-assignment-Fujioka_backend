@@ -11,7 +11,7 @@ from .views import signupfunc
 class TestSignUpView(TestCase):
     def setUp(self):
         self.client = Client()
-        self.next_url = reverse('tweets:test')
+        self.next_url = reverse('tweets:list')
         self.signup_url = reverse('accounts:signup')
         self.username = 'testsurutarou'
         self.password = 'watasihatestpassworddesu'
@@ -153,7 +153,7 @@ class TestLoginView(TestCase):
         self.client = Client()
         self.login_url = reverse('welcome:login')
         self.signup_url = reverse('accounts:signup')
-        self.redirect_url = reverse('tweets:test')
+        self.redirect_url = reverse('tweets:list')
         self.username = 'testuser'
         self.password = 'testpassword'
         self.credentials = {
@@ -220,7 +220,7 @@ class TestLogoutView(TestCase):
         self.login_url = reverse('welcome:login')
         self.logout_url = reverse('welcome:logout')
         self.signup_url = reverse('accounts:signup')
-        self.test_url = reverse('tweets:test')
+        self.next_url = reverse('tweets:list')
         self.username = 'testuser'
         self.password = 'testpassword'
         self.client.post(self.signup_url, {
@@ -230,13 +230,13 @@ class TestLogoutView(TestCase):
         login_response = self.client.login(
             username=self.username, password=self.password)
         self.assertEqual(login_response, True)
-        get_response = self.client.get(self.test_url)
+        get_response = self.client.get(self.next_url)
         self.assertEqual(get_response.status_code, 200)
 
         logout_response = self.client.get(self.logout_url)
         self.assertEqual(logout_response.status_code, 302)
         self.assertEqual(logout_response.url, self.login_url)
-        get_response = self.client.get(self.test_url)
+        get_response = self.client.get(self.next_url)
         self.assertNotEqual(get_response.status_code, 200)
 
         self.assertNotIn(SESSION_KEY, self.client.session)
