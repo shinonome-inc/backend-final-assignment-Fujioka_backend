@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView
 from django.views.generic.edit import BaseCreateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 from tweets.models import TweetModel
@@ -18,7 +19,7 @@ def listfunc(request):
     tweet_list = TweetModel.objects.order_by('created_date').reverse().all()
     return render(request, 'tweets/list.html', {'tweet_list': tweet_list})
 
-class TweetCreate(CreateView):
+class TweetCreate(LoginRequiredMixin, CreateView):
     model = TweetModel
     template_name = 'tweets/create.html'
     fields = ('text',)
@@ -32,9 +33,9 @@ class TweetCreate(CreateView):
 @login_required
 def detailfunc(request, pk):
     client_user = request.user.get_username()
-    author = request.GET['author']
-    identity = True if client_user == author else False
     tweet = get_object_or_404(TweetModel, pk=pk)
+    author = tweet.author
+    identity = True if client_user == author.username else False
     context = {
         'tweet': tweet,
         'identity': identity,
@@ -50,7 +51,7 @@ def delete_confirmfunc(request, pk):
     else :
         return redirect('tweets:list')
 
-class TweetDelete(DeleteView):
+class TweetDelete(LoginRequiredMixin, DeleteView):
     model = TweetModel
     template_name = 'tweets/delete.html'
     success_url = reverse_lazy('tweets:list')

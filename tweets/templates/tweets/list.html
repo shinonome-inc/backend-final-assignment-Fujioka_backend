@@ -24,7 +24,7 @@
             <a href='#' class="nav-link">
                 <p class="fs-5 text-decoration-none">> {{tweet.author}}</p>
             </a>
-            <a href="{%url 'tweets:detail' tweet.pk%}?author={{tweet.author}}" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
+            <a href="{%url 'tweets:detail' tweet.pk%}" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
                <svg class="bi me-2" width="40" height="32"><use xlink:href="#bootstrap"/></svg>
                 <span class="fs-6 pb-3">{{tweet.text}}</span>
             </a>

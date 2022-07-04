@@ -11,30 +11,38 @@ class TestTweetCreateView(TestCase):
         self.create_url = reverse('tweets:create')
         self.redirect_url = reverse('tweets:list')
         self.tweet_text = 'this is a test tweet.'
-        self.username = 'testuser'
         self.overlength_tweet_text = 'this is a looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong tweet.'
+        self.username = 'testuser'
+        self.password = 'testpassword'
+        self.user = User.objects.create_user(self.username, '', self.password)
+        self.client.login(username = self.username, password = self.password)
+        self.author = User.objects.get(username=self.username)
 
     def test_success_get(self):
+        self.client.logout()
+        response = self.client.get(self.create_url)
+        self.assertRedirects(response, '/login/?next=/tweets/create/')
+        self.client.login(username = self.username, password = self.password)
         response = self.client.get(self.create_url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tweets/create.html')
 
     def test_success_post(self):
         response = self.client.post(
-            self.create_url, {'text': self.tweet_text, 'author': self.username})
+            self.create_url, {'text': self.tweet_text, 'author': self.author})
         self.assertTrue(TweetModel.objects.exists())
         self.assertEqual(response.status_code, 302)
 
     def test_failure_post_with_empty_content(self):
         response = self.client.post(
-            self.create_url, {'text': '', 'author': self.username})
+            self.create_url, {'text': '', 'author': self.author})
         self.assertFalse(TweetModel.objects.exists())
         form = response.context.get('form')
         self.assertIsNotNone(form.errors.get('text'))
 
     def test_failure_post_with_too_long_content(self):
         response = self.client.post(
-            self.create_url, {'text': self.overlength_tweet_text, 'author': self.username})
+            self.create_url, {'text': self.overlength_tweet_text, 'author': self.author})
         self.assertFalse(TweetModel.objects.exists())
         form = response.context.get('form')
         self.assertIsNotNone(form.errors.get(
@@ -49,10 +57,14 @@ class TestTweetDetailView(TestCase):
         self.detail_url = reverse('tweets:detail', kwargs={'pk': 1})
         self.user = User.objects.create_user(self.username, '', self.password)
         self.client.login(username = self.username, password = self.password)
-        self.test_tweet = TweetModel.objects.create(text = 'test1', author = self.username)
+        self.test_tweet = TweetModel.objects.create(text = 'test1', author = User.objects.get(username=self.username))
     
     def test_success_get(self):
-        response = self.client.get(self.detail_url, {'author': self.username})
+        self.client.logout()
+        response = self.client.get(self.detail_url)
+        self.assertRedirects(response, '/login/?next=/tweets/detail/1')
+        self.client.login(username = self.username, password = self.password)
+        response = self.client.get(self.detail_url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tweets/detail.html')
 
