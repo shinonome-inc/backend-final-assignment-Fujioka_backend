@@ -33,10 +33,10 @@ class TweetCreate(LoginRequiredMixin, CreateView):
     
 @login_required
 def detailfunc(request, pk):
-    client_user = request.user.get_username()
+    client_user = request.user
     tweet = get_object_or_404(TweetModel, pk=pk)
     author = tweet.author
-    identity = True if client_user == author.username else False
+    identity = True if client_user == author else False
     context = {
         'tweet': tweet,
         'identity': identity,
@@ -45,9 +45,8 @@ def detailfunc(request, pk):
 
 @login_required
 def delete_confirmfunc(request, pk):
-    client_user = request.user.get_username()
-    # author = request.GET['author']
-    author = get_object_or_404(TweetModel, pk=pk).author.username
+    client_user = request.user
+    author = get_object_or_404(TweetModel, pk=pk).author
     if client_user == author:
         return redirect('tweets:delete', pk = pk)
     else :
