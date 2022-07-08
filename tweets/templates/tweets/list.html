@@ -37,35 +37,7 @@
         </div>
     {% endfor %}
 </div>
-
-<script type='text/javascript'>
-    $(document).ready(function(event) {
-        $(document).on('click', '#like', function(event) {
-            event.preventDefault();
-            $.ajax({
-                type: 'POST',
-                url: '{% url "tweets:like" %}',
-                data: {
-                    'tweet_pk': $(this).attr('name'),
-                    'csrfmiddlewaretoken': '{{csrf_token}}'
-                },
-                dataType: 'json',
-                success: function(response) {
-                    selector = document.getElementsByName(response.tweet_pk);
-                    if(response.liked) {
-                        $(selector).html("<i class='fas fa-lg fa-heart like-red'></i>");
-                    }
-                    else {
-                        $(selector).html("<i class='far fa-lg fa-heart'></i>");
-                    }
-                    console.log({{tweet.likemodel_set.count}}+ 'AAAAAAAAA')
-                    selector2 = document.getElementsByName(response.tweet_pk+'-count');
-                    $(selector2).text(response.count);
-                }
-            })
-        })
-    })
-</script>
+{% include 'tweets/script.html' %}
 {% else %}
 <a href="{% url 'login' %}">please login</a>
 {% endif %}

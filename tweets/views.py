@@ -77,7 +77,7 @@ class TweetDelete(LoginRequiredMixin, UserPassesTestMixin,  DeleteView):
 
 @login_required
 def likefunc(request):
-    if request.method == 'POST':
+    if request.method == 'POST' and request.POST.get('csrfmiddlewaretoken'):
         tweet = get_object_or_404(TweetModel, pk=request.POST.get('tweet_pk'))
         user = request.user
         liked = False

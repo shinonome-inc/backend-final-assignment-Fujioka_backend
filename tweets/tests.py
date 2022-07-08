@@ -1,7 +1,12 @@
+from traceback import print_tb
+from django.shortcuts import get_object_or_404
 from django.test import TestCase, Client
 from django.urls import reverse
+from mysite.settings import BASE_DIR
+from selenium.webdriver.chrome.webdriver import WebDriver
+from selenium import webdriver
 
-from tweets.models import TweetModel
+from tweets.models import LikeModel, TweetModel
 from accounts.models import User
 
 
@@ -107,7 +112,29 @@ class TestTweetDeleteView(TestCase):
 
 
 class TestFavoriteView(TestCase):
+    def setUp(self):
+        self.client = Client()
+        # self.selenium = WebDriver(executable_path='../geckodriver/chromedriver')
+        # driver = webdriver.Chrome(executable_path='../geckodriver/chromedriver')
+        
+        # self.driver = webdriver.Firefox([str(BASE_DIR / 'geckodriver' / 'geckodriver')])
+        self.username = 'testuser'
+        self.password = 'testpassword'
+        
+        User.objects.create_user(self.username, '', self.password)
+        self.user = User.objects.get(username = self.username)
+        self.client.login(username = self.username, password = self.password)
+        TweetModel.objects.create(text = 'test', author = User.objects.get(username = self.username))
+        self.tweet = TweetModel.objects.get(author = self.user)
+
+        self.list_url = reverse('tweets:list')
+        
     def test_success_post(self):
+        # self.driver.get(self.list_url)
+        # self.driver.find_element_by_id('like').click()
+        # self.assertFalse(LikeModel.objects.exists())
+        # self.client.post(self.list_url, {})
+        # print(LikeModel.objects.exists())
         pass
 
     def test_failure_post_with_not_exist_tweet(self):
