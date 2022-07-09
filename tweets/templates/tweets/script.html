@@ -1,6 +1,6 @@
-
 <script type='text/javascript'>
     $(document).ready(function(event) {
+        // #like のボタンをトリガーとして監視
         $(document).on('click', '#like', function(event) {
             //formのポストを監視、tweet_pk, csrf_tokenをjson形式でlikefuncに送る。
             event.preventDefault();
@@ -13,6 +13,8 @@
                 },
                 dataType: 'json',
                 success: function(response) {
+                    // 成功時の処理
+                    // likefuncのcontextを受け取り、スタイルを変更する。
                     selector = document.getElementsByName(response.tweet_pk);
                     if(response.liked) {
                         $(selector).html("<i class='fas fa-lg fa-heart like-red'></i>");

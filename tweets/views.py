@@ -20,6 +20,7 @@ def testfunc(request):
 def listfunc(request):
     tweet_list = TweetModel.objects.order_by('created_date').reverse().all()
     liked_tweets = []
+    # tweet_listのなかに、ユーザーが既にいいねを押したツイートを選別する
     for tweet in tweet_list:
         liked = tweet.likemodel_set.filter(user = request.user)
         if liked.exists():
@@ -77,11 +78,14 @@ class TweetDelete(LoginRequiredMixin, UserPassesTestMixin,  DeleteView):
 
 @login_required
 def likefunc(request):
-    if request.method == 'POST' and request.POST.get('csrfmiddlewaretoken'):
+    # Django Database 関連の処理
+    # POST送信の中にcsrf_tokenとtweet_pkが入っているかを確認
+    if request.method == 'POST' and request.POST.get('csrfmiddlewaretoken') and request.POST.get('tweet_pk'):
         tweet = get_object_or_404(TweetModel, pk=request.POST.get('tweet_pk'))
         user = request.user
         liked = False
         like = LikeModel.objects.filter(tweet = tweet, user = user)
+        # tweetがすでにいいねされていたら解除、そうでなければいいね作成
         if like.exists():
             like.delete()
         else:
@@ -93,6 +97,7 @@ def likefunc(request):
             'liked': liked,
             'count': tweet.likemodel_set.count(),
         }
+        # Json形式でcontextを送信。javascriptでスタイルの処理を行う
         return JsonResponse(context)
     
     else: 

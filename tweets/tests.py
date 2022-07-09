@@ -1,9 +1,10 @@
-from traceback import print_tb
-from django.shortcuts import get_object_or_404
+from telnetlib import EC
 from django.test import TestCase, Client
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.urls import reverse
-from mysite.settings import BASE_DIR
-from selenium.webdriver.chrome.webdriver import WebDriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
 
 from tweets.models import LikeModel, TweetModel
@@ -20,14 +21,14 @@ class TestTweetCreateView(TestCase):
         self.username = 'testuser'
         self.password = 'testpassword'
         self.user = User.objects.create_user(self.username, '', self.password)
-        self.client.login(username = self.username, password = self.password)
+        self.client.login(username=self.username, password=self.password)
         self.author = User.objects.get(username=self.username)
 
     def test_success_get(self):
         self.client.logout()
         response = self.client.get(self.create_url)
         self.assertRedirects(response, '/login/?next=/tweets/create/')
-        self.client.login(username = self.username, password = self.password)
+        self.client.login(username=self.username, password=self.password)
         response = self.client.get(self.create_url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tweets/create.html')
@@ -61,14 +62,15 @@ class TestTweetDetailView(TestCase):
         self.password = 'testpassword'
         self.detail_url = reverse('tweets:detail', kwargs={'pk': 1})
         self.user = User.objects.create_user(self.username, '', self.password)
-        self.client.login(username = self.username, password = self.password)
-        self.test_tweet = TweetModel.objects.create(text = 'test1', author = User.objects.get(username=self.username))
-    
+        self.client.login(username=self.username, password=self.password)
+        self.test_tweet = TweetModel.objects.create(
+            text='test1', author=User.objects.get(username=self.username))
+
     def test_success_get(self):
         self.client.logout()
         response = self.client.get(self.detail_url)
         self.assertRedirects(response, '/login/?next=/tweets/detail/1')
-        self.client.login(username = self.username, password = self.password)
+        self.client.login(username=self.username, password=self.password)
         response = self.client.get(self.detail_url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tweets/detail.html')
@@ -80,12 +82,14 @@ class TestTweetDeleteView(TestCase):
         self.username = 'testuser'
         self.password = 'testpassword'
         self.delete_url = reverse('tweets:delete', kwargs={'pk': 1})
-        self.delete_confirm_rul = reverse('tweets:delete_confirm', kwargs={'pk': 1})
+        self.delete_confirm_rul = reverse(
+            'tweets:delete_confirm', kwargs={'pk': 1})
         self.create_url = reverse('tweets:create')
         self.user = User.objects.create_user(self.username, '', self.password)
-        self.client.login(username = self.username, password = self.password)
-        self.client.post(self.create_url, {'text': 'text_text', 'author': self.username})
-    
+        self.client.login(username=self.username, password=self.password)
+        self.client.post(self.create_url, {
+                         'text': 'text_text', 'author': self.username})
+
     def test_success_post(self):
         response = self.client.post(self.delete_url)
         self.assertFalse(TweetModel.objects.exists())
@@ -99,51 +103,80 @@ class TestTweetDeleteView(TestCase):
     def test_failure_post_with_incorrect_user(self):
         self.client.logout()
         self.user = User.objects.create_user('waruihito', '', 'iambadman')
-        self.client.login(username = 'waruihito', password = 'iambadman')
-        
+        self.client.login(username='waruihito', password='iambadman')
+
         response = self.client.get(self.delete_confirm_rul)
         self.assertRedirects(response, reverse('tweets:list'), 302, 200)
         self.assertTrue(TweetModel.objects.exists())
-        
+
         response = self.client.get(self.delete_url)
         self.assertEqual(response.status_code, 403)
         self.assertTrue(TweetModel.objects.exists())
-        
 
 
-class TestFavoriteView(TestCase):
+class TestFavoriteView(StaticLiveServerTestCase):
     def setUp(self):
         self.client = Client()
-        # self.selenium = WebDriver(executable_path='../geckodriver/chromedriver')
-        # driver = webdriver.Chrome(executable_path='../geckodriver/chromedriver')
-        
-        # self.driver = webdriver.Firefox([str(BASE_DIR / 'geckodriver' / 'geckodriver')])
         self.username = 'testuser'
+        self.loginname = 'loginuser'
         self.password = 'testpassword'
-        
-        User.objects.create_user(self.username, '', self.password)
-        self.user = User.objects.get(username = self.username)
-        self.client.login(username = self.username, password = self.password)
-        TweetModel.objects.create(text = 'test', author = User.objects.get(username = self.username))
-        self.tweet = TweetModel.objects.get(author = self.user)
-
         self.list_url = reverse('tweets:list')
+
+        # テストユーザーとテストツイートを作る
+        self.client.force_login(User.objects.create_user(self.username, '', self.password))
+        self.user = User.objects.get(username=self.username)
+        TweetModel.objects.create(
+            text='test', author=User.objects.get(username=self.username))
+        self.tweet = TweetModel.objects.get(author=self.user)
+
+        # seleniumでログイン
+        self.selenium = webdriver.Chrome(executable_path='./chromedriver')
+        self.selenium.get(self.live_server_url +
+                          str(reverse('welcome:login')))
+        self.selenium.find_element(By.NAME, 'username').send_keys(self.username)
+        self.selenium.find_element(By.NAME, 'password').send_keys(self.password)
+        self.selenium.find_element(By.TAG_NAME, 'button').click()
+        self.selenium.implicitly_wait(1)
         
+
+    def tearDown(self):
+        self.selenium.quit()
+
     def test_success_post(self):
-        # self.driver.get(self.list_url)
-        # self.driver.find_element_by_id('like').click()
-        # self.assertFalse(LikeModel.objects.exists())
-        # self.client.post(self.list_url, {})
-        # print(LikeModel.objects.exists())
-        pass
+        # いいねボタンをクリックしてボタンの変化を確認
+        self.selenium.find_element(By.ID, 'like').click()
+        WebDriverWait(self.selenium, 3).until(EC.presence_of_all_elements_located(
+            (By.CLASS_NAME, 'fas')))
+
+        #　Likeが作られているか
+        self.assertTrue(LikeModel.objects.exists())
 
     def test_failure_post_with_not_exist_tweet(self):
-        pass
+        # いいねはツイートにあるいいねボタンを押すことによる適切なPOST(適切なcsrf_token及びtweet_pkを保持)でのみ動作する。
+        # 空のPOSTより送信したcsrf_tokenと存在しないtweet_pkを用いてpost送信をして、LikeModelが生成していないことを確認する。
+        response = self.client.post(self.list_url)
+        cookie_data = str(response.cookies).split(';')
+        csrf = cookie_data[0].replace('Set-Cookie: csrftoken=', '')
+        self.client.post(self.list_url, {'csrfmiddlewaretoken': csrf, 'tweet_pk': 9999})
+        self.assertFalse(LikeModel.objects.exists())
 
     def test_failure_post_with_favorited_tweet(self):
-        pass
+        # 一度いいねボタンを押す
+        self.selenium.find_element(By.ID, 'like').click()
+        WebDriverWait(self.selenium, 3).until(EC.presence_of_all_elements_located(
+            (By.CLASS_NAME, 'fas')))
+        # LikeModelが作られていることを確認
+        self.assertTrue(LikeModel.objects.exists())
+        
+        # もう一度いいねボタンを押す。ボタンのスタイルが変わるのを確認
+        self.selenium.find_element(By.ID, 'like').click()
+        WebDriverWait(self.selenium, 3).until(EC.presence_of_all_elements_located(
+            (By.CLASS_NAME, 'far')))
+        # LikeModelが消去されていることを確認
+        self.assertFalse(LikeModel.objects.exists())
 
 
+# TestFavoriteView.test_failure_post_with_favorited_tweetにて目的は果たせているため省略
 class TestUnfavoriteView(TestCase):
     def test_success_post(self):
         pass
