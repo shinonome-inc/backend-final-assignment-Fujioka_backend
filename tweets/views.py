@@ -24,8 +24,8 @@ def listfunc(request):
     tweet_list = TweetModel.objects.order_by('created_date').reverse().all()
     
     # tweet_listのなかに、ユーザーが既にいいねを押したツイートを選別する
-    liked_tweets = map(lambda tweet: tweet.pk if tweet.likemodel_set.filter(user = request.user) else None, tweet_list)
-    # liked_tweets = request.user.likemodel_set.values_list('tweet', flat=True)
+    # liked_tweets = map(lambda tweet: tweet.pk if tweet.likemodel_set.filter(user = request.user) else None, tweet_list)
+    liked_tweets = request.user.likemodel_set.values_list('tweet', flat=True)
             
     context = {
         'tweet_list': tweet_list,
