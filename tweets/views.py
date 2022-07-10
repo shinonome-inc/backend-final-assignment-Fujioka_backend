@@ -1,3 +1,6 @@
+from pprint import pprint
+from typing import Any, Final, List, Tuple, TypedDict
+from urllib.request import DataHandler
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -85,12 +88,19 @@ def likefunc(request):
         user = request.user
         liked = False
         like = LikeModel.objects.filter(tweet = tweet, user = user)
+        
+        dataType = TypedDict('dataType', {'tweet': TweetModel, 'user': Any, 'liked': bool, 'like': Any})
+        data: dataType = dict(tweet=tweet, user=user, liked=liked, like=like)
+        
         # tweetがすでにいいねされていたら解除、そうでなければいいね作成
+        # 変数の変更はいいねが押されているかの判別のlikedに限定すること
+        # それ以外の処理はLikeHnadleに記載する
         if like.exists():
-            like.delete()
+            # いいね解除の処理
+            liked = LikeHandle.deletelikefunc(data)
         else:
-            like.create(tweet = tweet, user = user)
-            liked = True
+            # いいね作成の処理
+            liked = LikeHandle.createlikefunc(data)
             
         context = {
             'tweet_pk': tweet.pk,
@@ -102,3 +112,16 @@ def likefunc(request):
     
     else: 
         pass
+
+class LikeHandle():
+    
+    # いいね解除の処理
+    def deletelikefunc(data):
+        data['like'].delete()
+        return data['liked']
+    
+    # いいね作成の処理
+    def createlikefunc(data):
+        data['like'].create(tweet = data['tweet'], user = data['user'])
+        data['liked'] = True
+        return data['liked']
