@@ -22,12 +22,9 @@ def testfunc(request):
 @login_required
 def listfunc(request):
     tweet_list = TweetModel.objects.order_by('created_date').reverse().all()
-    liked_tweets = []
+    
     # tweet_listのなかに、ユーザーが既にいいねを押したツイートを選別する
-    for tweet in tweet_list:
-        liked = tweet.likemodel_set.filter(user = request.user)
-        if liked.exists():
-            liked_tweets.append(tweet.pk)
+    liked_tweets = map(lambda tweet: tweet.pk if tweet.likemodel_set.filter(user = request.user) else None, tweet_list)
             
     context = {
         'tweet_list': tweet_list,
@@ -83,28 +80,28 @@ class TweetDelete(LoginRequiredMixin, UserPassesTestMixin,  DeleteView):
 def likefunc(request):
     # Django Database 関連の処理
     # POST送信の中にcsrf_tokenとtweet_pkが入っているかを確認
-    if request.method == 'POST' and request.POST.get('csrfmiddlewaretoken') and request.POST.get('tweet_pk'):
+    if request.method == 'POST' and request.POST.get('tweet_pk'):
         tweet = get_object_or_404(TweetModel, pk=request.POST.get('tweet_pk'))
         user = request.user
-        liked = False
+        is_liked = False
         like = LikeModel.objects.filter(tweet = tweet, user = user)
         
-        dataType = TypedDict('dataType', {'tweet': TweetModel, 'user': Any, 'liked': bool, 'like': Any})
-        data: dataType = dict(tweet=tweet, user=user, liked=liked, like=like)
+        dataType = TypedDict('dataType', {'tweet': TweetModel, 'user': Any, 'is_liked': bool, 'like': Any})
+        data: dataType = dict(tweet=tweet, user=user, is_liked=is_liked, like=like)
         
         # tweetがすでにいいねされていたら解除、そうでなければいいね作成
-        # 変数の変更はいいねが押されているかの判別のlikedに限定すること
+        # 変数の変更はいいねが押されているかの判別のis_likedに限定すること
         # それ以外の処理はLikeHnadleに記載する
         if like.exists():
             # いいね解除の処理
-            liked = LikeHandle.deletelikefunc(data)
+            is_liked = LikeHandle.deletelikefunc(data)
         else:
             # いいね作成の処理
-            liked = LikeHandle.createlikefunc(data)
+            is_liked = LikeHandle.createlikefunc(data)
             
         context = {
             'tweet_pk': tweet.pk,
-            'liked': liked,
+            'is_liked': is_liked,
             'count': tweet.likemodel_set.count(),
         }
         # Json形式でcontextを送信。javascriptでスタイルの処理を行う
@@ -118,10 +115,10 @@ class LikeHandle():
     # いいね解除の処理
     def deletelikefunc(data):
         data['like'].delete()
-        return data['liked']
+        return data['is_liked']
     
     # いいね作成の処理
     def createlikefunc(data):
         data['like'].create(tweet = data['tweet'], user = data['user'])
-        data['liked'] = True
-        return data['liked']
+        data['is_liked'] = True
+        return data['is_liked']

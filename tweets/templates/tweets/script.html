@@ -16,7 +16,7 @@
                     // 成功時の処理
                     // likefuncのcontextを受け取り、スタイルを変更する。
                     selector = document.getElementsByName(response.tweet_pk);
-                    if(response.liked) {
+                    if(response.is_liked) {
                         $(selector).html("<i class='fas fa-lg fa-heart like-red'></i>");
                     }
                     else {
