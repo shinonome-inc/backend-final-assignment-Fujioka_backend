@@ -80,33 +80,40 @@ class TweetDelete(LoginRequiredMixin, UserPassesTestMixin,  DeleteView):
 @login_required
 def likefunc(request):
     # Django Database 関連の処理
-    # POST送信の中にcsrf_tokenとtweet_pkが入っているかを確認
-    if request.method == 'POST' and request.POST.get('tweet_pk'):
-        tweet = get_object_or_404(TweetModel, pk=request.POST.get('tweet_pk'))
-        user = request.user
-        is_liked = False
-        like = LikeModel.objects.filter(tweet = tweet, user = user)
-        
-        dataType = TypedDict('dataType', {'tweet': TweetModel, 'user': Any, 'is_liked': bool, 'like': Any})
-        data: dataType = dict(tweet=tweet, user=user, is_liked=is_liked, like=like)
-        
-        # tweetがすでにいいねされていたら解除、そうでなければいいね作成
-        # 変数の変更はいいねが押されているかの判別のis_likedに限定すること
-        # それ以外の処理はLikeHnadleに記載する
-        if like.exists():
-            # いいね解除の処理
-            is_liked = LikeHandle.deletelikefunc(data)
-        else:
-            # いいね作成の処理
-            is_liked = LikeHandle.createlikefunc(data)
+    # POST送信かを確認
+    if request.method == 'POST' :
+        # POST送信の中にcsrf_tokenとtweet_pkが入っているかを確認
+        if request.POST.get('tweet_pk') and request.POST.get('csrfmiddlewaretoken'):
+            tweet = get_object_or_404(TweetModel, pk=request.POST.get('tweet_pk'))
+            user = request.user
+            is_liked = False
+            like = LikeModel.objects.filter(tweet = tweet, user = user)
             
-        context = {
-            'tweet_pk': tweet.pk,
-            'is_liked': is_liked,
-            'count': tweet.likemodel_set.count(),
-        }
-        # Json形式でcontextを送信。javascriptでスタイルの処理を行う
-        return JsonResponse(context)
+            dataType = TypedDict('dataType', {'tweet': TweetModel, 'user': Any, 'is_liked': bool, 'like': Any})
+            data: dataType = dict(tweet=tweet, user=user, is_liked=is_liked, like=like)
+            
+            # tweetがすでにいいねされていたら解除、そうでなければいいね作成
+            # 変数の変更はいいねが押されているかの判別のis_likedに限定すること
+            # それ以外の処理はLikeHnadleに記載する
+            if like.exists():
+                # いいね解除の処理
+                is_liked = LikeHandle.deletelikefunc(data)
+            else:
+                # いいね作成の処理
+                is_liked = LikeHandle.createlikefunc(data)
+                
+            context = {
+                'tweet_pk': tweet.pk,
+                'is_liked': is_liked,
+                'count': tweet.likemodel_set.count(),
+            }
+            # Json形式でcontextを送信。javascriptでスタイルの処理を行う
+            return JsonResponse(context)
+        
+        else:
+            # postの内容物のエラーハンドリング
+            print('POSTエラー')
+            pass
     
     else: 
         pass
