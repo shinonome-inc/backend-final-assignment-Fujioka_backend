@@ -1,3 +1,4 @@
+import json
 from telnetlib import EC
 from django.test import TestCase, Client
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
@@ -131,6 +132,11 @@ class TestFavoriteView(StaticLiveServerTestCase):
             text='test', author=User.objects.get(username=self.username))
         self.tweet = TweetModel.objects.get(author=self.user)
 
+        # POST用のjsonデータ
+        post_obj = {'tweet_pk': TweetModel.objects.get(
+            author=User.objects.get(username=self.username)).pk}
+        self.json = json.dumps(post_obj)
+        
         # seleniumでログイン
         self.selenium = webdriver.Chrome(executable_path='./chromedriver')
         self.selenium.get(self.live_server_url +
@@ -163,8 +169,7 @@ class TestFavoriteView(StaticLiveServerTestCase):
         self.assertFalse(LikeModel.objects.exists())
 
         # POST送信の確認
-        self.client.post(self.like_url, {'tweet_pk': TweetModel.objects.get(
-            author=User.objects.get(username=self.username)).pk, 'csrfmiddlewaretoken': 'damycsrftoken'})
+        self.client.post(self.like_url, self.json, content_type="application/json")
         self.assertTrue(LikeModel.objects.exists())
 
     def test_failure_post_with_not_exist_tweet(self):
@@ -178,8 +183,9 @@ class TestFavoriteView(StaticLiveServerTestCase):
         self.assertFalse(LikeModel.objects.exists())
         
         # POST送信の確認
-        self.client.post(self.like_url, {'tweet_pk': TweetModel.objects.get(
-            author=User.objects.get(username=self.username)).pk + 1, 'csrfmiddlewaretoken': 'damycsrftoken'})
+        post_obj = {'tweet_pk': TweetModel.objects.get(
+            author=User.objects.get(username=self.username)).pk + 1}
+        self.client.post(self.like_url, json.dumps(post_obj), content_type="application/json")
         self.assertFalse(LikeModel.objects.exists())
 
     def test_failure_post_with_favorited_tweet(self):
@@ -199,13 +205,11 @@ class TestFavoriteView(StaticLiveServerTestCase):
         
         # POST送信の確認
         # 一度いいねする
-        self.client.post(self.like_url, {'tweet_pk': TweetModel.objects.get(
-            author=User.objects.get(username=self.username)).pk, 'csrfmiddlewaretoken': 'damycsrftoken'})
+        self.client.post(self.like_url, self.json, content_type="application/json")
         self.assertTrue(LikeModel.objects.exists())
 
         # もう一度いいねする
-        self.client.post(self.like_url, {'tweet_pk': TweetModel.objects.get(
-            author=User.objects.get(username=self.username)).pk, 'csrfmiddlewaretoken': 'damycsrftoken'})
+        self.client.post(self.like_url, self.json, content_type="application/json")
         self.assertFalse(LikeModel.objects.exists())
         
 

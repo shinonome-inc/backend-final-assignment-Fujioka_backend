@@ -1,6 +1,5 @@
-from pprint import pprint
-from typing import Any, Final, List, Tuple, TypedDict
-from urllib.request import DataHandler
+import json
+from typing import Any, TypedDict
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -82,9 +81,12 @@ def likefunc(request):
     # Django Database 関連の処理
     # POST送信かを確認
     if request.method == 'POST' :
-        # POST送信の中にcsrf_tokenとtweet_pkが入っているかを確認
-        if request.POST.get('tweet_pk') and request.POST.get('csrfmiddlewaretoken'):
-            tweet = get_object_or_404(TweetModel, pk=request.POST.get('tweet_pk'))
+        # jsonファイルを取得
+        json_body = request.body.decode("utf-8")
+        body = json.loads(json_body)
+        # POST送信の中にtweet_pkが入っているかを確認
+        if body['tweet_pk']:
+            tweet = get_object_or_404(TweetModel, pk=body['tweet_pk'])
             user = request.user
             is_liked = False
             like = LikeModel.objects.filter(tweet = tweet, user = user)
@@ -114,9 +116,6 @@ def likefunc(request):
             # postの内容物のエラーハンドリング
             print('POSTエラー')
             pass
-    
-    else: 
-        pass
 
 class LikeHandle():
     

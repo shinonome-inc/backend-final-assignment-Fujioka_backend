@@ -1,31 +1,58 @@
-<script type='text/javascript'>
-    $(document).ready(function(event) {
-        // #like のボタンをトリガーとして監視
-        $(document).on('click', '#like', function(event) {
-            //formのポストを監視、tweet_pk, csrf_tokenをjson形式でlikefuncに送る。
-            event.preventDefault();
-            $.ajax({
-                type: 'POST',
-                url: '{% url "tweets:like" %}',
-                data: {
-                    'tweet_pk': $(this).attr('name'),
-                    'csrfmiddlewaretoken': '{{csrf_token}}'
-                },
-                dataType: 'json',
-                success: function(response) {
-                    // 成功時の処理
-                    // likefuncのcontextを受け取り、スタイルを変更する。
-                    selector = document.getElementsByName(response.tweet_pk);
-                    if(response.is_liked) {
-                        $(selector).html("<i class='fas fa-lg fa-heart like-red'></i>");
-                    }
-                    else {
-                        $(selector).html("<i class='far fa-lg fa-heart'></i>");
-                    }
-                    selector2 = document.getElementsByName(response.tweet_pk+'-count');
-                    $(selector2).text(response.count);
-                }
-            })
-        })
+<script type="text/javascript">
+    // クッキー取得
+    const getCookie = (name) => {
+      if (document.cookie && document.cookie !== "") {
+        for (const cookie of document.cookie.split(";")) {
+          const [key, value] = cookie.trim().split("=");
+          if (key === name) {
+            return decodeURIComponent(value);
+          }
+        }
+      }
+    };
+    // csrf_token取得
+    const csrftoken = getCookie("csrftoken");
+
+
+    // いいねボタンのスタイルを変更
+    const changeStyles = jsonResponse => {
+          const selector = document.getElementsByName(jsonResponse.tweet_pk)[0];
+          if (jsonResponse.is_liked) {
+            selector.innerHTML = "<i class='fas fa-lg fa-heart like-red'></i>";
+          } else {
+            selector.innerHTML = "<i class='far fa-lg fa-heart'></i>";
+          }
+          document.getElementsByName(jsonResponse.tweet_pk + "-count")[0].textContent = jsonResponse.count;
+    }
+
+
+    // いいねボタンがクリックされたときの挙動
+    async function likeButtonClicked(event)  {
+      event.preventDefault()
+
+      const postBody = {
+        tweet_pk: this.getAttribute("name"),
+      };
+      const postData = {
+        method: "POST",
+        body: JSON.stringify(postBody),
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrftoken,
+        },
+      };
+
+      const response = await fetch('/tweets/like', postData)
+      const json = await response.json();
+      changeStyles(json)
+
+    };
+
+
+    // イベント付与
+    const likeButtonslist = document.querySelectorAll('#like');
+    likeButtonslist.forEach(likeButton => {
+        likeButton.addEventListener("click", likeButtonClicked);
     })
+
 </script>

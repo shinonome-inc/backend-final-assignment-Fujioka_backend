@@ -1,7 +1,7 @@
 <div class="container px-1">
     <div class="row gx-2">
       <div class="col mx-1">
-        <form action={% url 'tweets:like'%} method='POST'>
+        <form  >
             {% csrf_token %}
             {% if tweet.pk in liked_tweets %}
                 <button id='like' name='{{tweet.pk}}'><i class="fas fa-lg fa-heart like-red"></i></button>
