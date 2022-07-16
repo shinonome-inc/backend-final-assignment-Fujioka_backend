@@ -114,7 +114,6 @@ def likefunc(request):
         
         else:
             # postの内容物のエラーハンドリング
-            print('POSTエラー')
             pass
 
 class LikeHandle():

@@ -152,6 +152,28 @@ class TestFavoriteView(StaticLiveServerTestCase):
         self.selenium.quit()
 
     def test_success_post(self):
+        # POST送信の確認
+        self.client.post(self.like_url, self.json, content_type="application/json")
+        self.assertTrue(LikeModel.objects.exists())
+
+    def test_failure_post_with_not_exist_tweet(self):
+        # POST送信の確認
+        post_obj = {'tweet_pk': TweetModel.objects.get(
+            author=User.objects.get(username=self.username)).pk + 1}
+        self.client.post(self.like_url, json.dumps(post_obj), content_type="application/json")
+        self.assertFalse(LikeModel.objects.exists())
+
+    def test_failure_post_with_favorited_tweet(self):
+        # POST送信の確認
+        # 一度いいねする
+        self.client.post(self.like_url, self.json, content_type="application/json")
+        self.assertTrue(LikeModel.objects.exists())
+
+        # もう一度いいねする
+        self.client.post(self.like_url, self.json, content_type="application/json")
+        self.assertFalse(LikeModel.objects.exists())
+        
+    def test_UI_success_post(self):
         # いいねボタンをクリックしてボタンの変化を確認
         self.selenium.find_element(By.ID, 'like').click()
         WebDriverWait(self.selenium, 3).until(EC.presence_of_all_elements_located(
@@ -159,20 +181,8 @@ class TestFavoriteView(StaticLiveServerTestCase):
 
         #　Likeが作られているか
         self.assertTrue(LikeModel.objects.exists())
-
-        # いいねを取り消し
-        self.selenium.find_element(By.ID, 'like').click()
-        WebDriverWait(self.selenium, 3).until(EC.presence_of_all_elements_located(
-            (By.CLASS_NAME, 'far')))
-
-        # 取り消されているか確認
-        self.assertFalse(LikeModel.objects.exists())
-
-        # POST送信の確認
-        self.client.post(self.like_url, self.json, content_type="application/json")
-        self.assertTrue(LikeModel.objects.exists())
-
-    def test_failure_post_with_not_exist_tweet(self):
+        
+    def test_UI_failure_post_with_not_exist_tweet(self):
         # いいねはツイートにあるいいねボタンを押すことによる適切なPOST(適切なcsrf_token及びtweet_pkを保持)でのみ動作する。
         # 空のPOSTより送信したcsrf_tokenと存在しないtweet_pkを用いてpost送信をして、LikeModelが生成していないことを確認する。
         response = self.client.post(self.list_url)
@@ -182,13 +192,7 @@ class TestFavoriteView(StaticLiveServerTestCase):
             self.list_url, {'csrfmiddlewaretoken': csrf, 'tweet_pk': 9999})
         self.assertFalse(LikeModel.objects.exists())
         
-        # POST送信の確認
-        post_obj = {'tweet_pk': TweetModel.objects.get(
-            author=User.objects.get(username=self.username)).pk + 1}
-        self.client.post(self.like_url, json.dumps(post_obj), content_type="application/json")
-        self.assertFalse(LikeModel.objects.exists())
-
-    def test_failure_post_with_favorited_tweet(self):
+    def test_UI_failure_post_with_favorited_tweet(self):
         # 一度いいねボタンを押す
         self.selenium.find_element(By.ID, 'like').click()
         WebDriverWait(self.selenium, 3).until(EC.presence_of_all_elements_located(
@@ -201,15 +205,6 @@ class TestFavoriteView(StaticLiveServerTestCase):
         WebDriverWait(self.selenium, 3).until(EC.presence_of_all_elements_located(
             (By.CLASS_NAME, 'far')))
         # LikeModelが消去されていることを確認
-        self.assertFalse(LikeModel.objects.exists())
-        
-        # POST送信の確認
-        # 一度いいねする
-        self.client.post(self.like_url, self.json, content_type="application/json")
-        self.assertTrue(LikeModel.objects.exists())
-
-        # もう一度いいねする
-        self.client.post(self.like_url, self.json, content_type="application/json")
         self.assertFalse(LikeModel.objects.exists())
         
 
