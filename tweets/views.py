@@ -49,9 +49,12 @@ def detailfunc(request, pk):
     tweet = get_object_or_404(TweetModel, pk=pk)
     author = tweet.author
     identity = True if client_user == author else False
+    liked_tweets = request.user.likemodel_set.values_list('tweet', flat=True)
+    
     context = {
         'tweet': tweet,
         'identity': identity,
+        'liked_tweets': liked_tweets,
     }
     return render(request, 'tweets/detail.html', context)
 

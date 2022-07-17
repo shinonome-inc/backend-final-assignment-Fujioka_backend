@@ -46,12 +46,16 @@ def profilefunc(request, user_pk):
         user_tweets = False
     tweets_exist = True if user_tweets else False
 
+    # いいねしているツイートの取得
+    liked_tweets = request.user.likemodel_set.values_list('tweet', flat=True)
+
     context = {
         'account': account,
         'user_tweets': user_tweets,
         'tweets_exist': tweets_exist,
         'identify': identity,
         'follow_detecting': follow_detecting,
+        'liked_tweets': liked_tweets,
     }
 
     return render(request, 'accounts/profile.html', context)
