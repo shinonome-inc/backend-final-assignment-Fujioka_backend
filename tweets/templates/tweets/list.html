@@ -18,21 +18,9 @@
             New Tweet
         </div>
     </a>
-        {% for tweet in tweet_list %}
+    {% for tweet in tweet_list %}
         <div class="alert alert-light  pt-0 pb-0" role='alert'>
-            {% comment %} <a href={%url 'accounts:profile' tweet.author%} class="nav-link"> {% endcomment %}
-            <a href='#' class="nav-link">
-                <p class="fs-5 text-decoration-none">> {{tweet.author}}</p>
-            </a>
-            <a href="{%url 'tweets:detail' tweet.pk%}" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none" name='detail'>
-               <svg class="bi me-2" width="40" height="32"><use xlink:href="#bootstrap"/></svg>
-                <span class="fs-6 pb-3">{{tweet.text}}</span>
-            </a>
-
-            <div class="like-outer">
-                {% include 'tweets/like.html' %}
-            </div>
-            
+            {% include 'tweets/atweet.html' %}
             <hr/>
         </div>
     {% endfor %}
