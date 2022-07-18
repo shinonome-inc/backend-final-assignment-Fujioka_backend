@@ -120,14 +120,15 @@ def likefunc(request):
             pass
 
 class LikeHandle():
+    dataType = TypedDict('dataType', {'tweet': TweetModel, 'user': Any, 'is_liked': bool, 'like': Any})
     
     # いいね解除の処理
-    def deletelikefunc(data):
+    def deletelikefunc(data: dataType):
         data['like'].delete()
         return data['is_liked']
     
     # いいね作成の処理
-    def createlikefunc(data):
+    def createlikefunc(data: dataType):
         data['like'].create(tweet = data['tweet'], user = data['user'])
         data['is_liked'] = True
         return data['is_liked']
