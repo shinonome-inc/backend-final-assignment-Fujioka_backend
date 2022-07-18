@@ -117,7 +117,7 @@ def likefunc(request):
         
         else:
             # postの内容物のエラーハンドリング
-            pass
+            return JsonResponse({})
 
 class LikeHandle():
     dataType = TypedDict('dataType', {'tweet': TweetModel, 'user': Any, 'is_liked': bool, 'like': Any})

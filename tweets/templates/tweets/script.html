@@ -16,13 +16,15 @@
 
     // いいねボタンのスタイルを変更
     const changeStyles = jsonResponse => {
-          const selector = document.getElementsByName(jsonResponse.tweet_pk)[0];
-          if (jsonResponse.is_liked) {
-            selector.innerHTML = "<i class='fas fa-lg fa-heart like-red'></i>";
-          } else {
-            selector.innerHTML = "<i class='far fa-lg fa-heart'></i>";
-          }
-          document.getElementsByName(jsonResponse.tweet_pk + "-count")[0].textContent = jsonResponse.count;
+        if (jsonResponse !== {}) {
+            const selector = document.getElementsByName(jsonResponse.tweet_pk)[0];
+            if (jsonResponse.is_liked) {
+                selector.innerHTML = "<i class='fas fa-lg fa-heart like-red'></i>";
+            } else if (!jsonResponse.is_liked) {
+                selector.innerHTML = "<i class='far fa-lg fa-heart'></i>";
+            }
+            document.getElementsByName(jsonResponse.tweet_pk + "-count")[0].textContent = jsonResponse.count;
+        }
     }
 
 

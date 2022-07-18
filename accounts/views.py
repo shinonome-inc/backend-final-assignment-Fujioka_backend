@@ -71,7 +71,7 @@ def followfunc(request):
         json_body = request.body.decode("utf-8")
         body = json.loads(json_body)
         # postの中に適切なデータが入っているか確認
-        if body['client_pk'] and body['account_pk']:
+        if body['client_pk'] and body['account_pk'] and body['client_pk'] != body['account_pk']:
             client = get_object_or_404(User, pk=body['client_pk'])
             account = get_object_or_404(User, pk=body['account_pk'])
             
@@ -94,7 +94,7 @@ def followfunc(request):
         
         else:
             # postの内容物が揃っていなかったときのエラーハンドリング
-            pass
+            return JsonResponse({})
     
 
 class FollowHandle():
