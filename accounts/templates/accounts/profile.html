@@ -12,8 +12,8 @@
     <div class="alert alert-light" role="alert">
         <ul class="nav nav-pills">
             <p class="fs-1 mx-4">{{account.username}}</p>
-            <li class="nav-item mx-2 pt-2"><a href='#' class="nav-link">Following &nbsp; ##</a></li>
-            <li class="nav-item mx-2 pt-2"><a href='#' class="nav-link">Follower &nbsp; ##</a></li>
+            <li class="nav-item mx-2 pt-2"><a href='#' class="nav-link">Following &nbsp; {{account.following_user.count}}</a></li>
+            <li class="nav-item mx-2 pt-2"><a href='#' class="nav-link">Follower &nbsp; {{account.follower_user.count}}</a></li>
             {% if identify %}
                 <div class="fs-2 mb-3">
                     <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-bookmark m-3" viewBox="0 0 16 16">
