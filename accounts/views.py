@@ -31,32 +31,28 @@ def signupfunc(request):
 def profilefunc(request, user_pk):
     # 使用しているユーザと、クリックされたユーザを取得
     client_user = request.user
-    account = get_object_or_404(User, pk=user_pk)
+    clicked_account = get_object_or_404(User, pk=user_pk)
     # これらのユーザが同一人物家を確認
-    identity = True if client_user == account else False
+    is_same_user: bool = True if client_user == clicked_account else False
     
     # フォローしているかの確認
     follow_detecting = False
-    if (identity == False) :
-        follow_detecting = True if account.pk in client_user.following_user.values_list('follower_user', flat=True) else False
+    if (is_same_user == False) :
+        follow_detecting = True if clicked_account.pk in client_user.following_user.values_list('follower_user', flat=True) else False
     
 
     # ツイートの取得
-    try:
-        user_tweets = get_list_or_404(TweetModel.objects.order_by(
-            'created_date').reverse().all(), author=account)
-    except:
-        user_tweets = False
+    user_tweets = TweetModel.objects.filter(author=clicked_account).order_by('created_date').reverse().all()
     tweets_exist = True if user_tweets else False
 
     # いいねしているツイートの取得
     liked_tweets = request.user.likemodel_set.values_list('tweet', flat=True)
 
     context = {
-        'account': account,
+        'clicked_account': clicked_account,
         'user_tweets': user_tweets,
         'tweets_exist': tweets_exist,
-        'identify': identity,
+        'is_same_user': is_same_user,
         'follow_detecting': follow_detecting,
         'liked_tweets': liked_tweets,
     }
@@ -73,22 +69,23 @@ def followfunc(request):
         # postの中に適切なデータが入っているか確認
         if body['client_pk'] and body['account_pk'] and body['client_pk'] != body['account_pk']:
             client = get_object_or_404(User, pk=body['client_pk'])
-            account = get_object_or_404(User, pk=body['account_pk'])
+            clicked_account = get_object_or_404(User, pk=body['account_pk'])
             
             # フォローしているかの再確認
-            follow_detecting = True if account.pk in client.following_user.values_list('follower_user', flat=True) else False
+            is_followed = True if clicked_account.pk in client.following_user.values_list('follower_user', flat=True) else False
 
-            dataType = TypedDict('dataType', {'client': User, 'account': User})
-            data: dataType = dict(client = client, account = account)
+            dataType = TypedDict('dataType', {'client': User, 'clicked_account': User})
+            data: dataType = dict(client = client, clicked_account = clicked_account)
             # フォローしていたときの処理
-            if follow_detecting:
+            if is_followed:
                 FollowHandle.delete_followfunc(data)
             # フォローしていなかったときの処理
             else:
                 FollowHandle.create_followfunc(data)
 
             context = {
-                'is_followed': not follow_detecting,
+                'is_followed': not is_followed,
+                'follower_number': clicked_account.follower_user.count(),
             }
             return JsonResponse(context)
         
@@ -98,13 +95,13 @@ def followfunc(request):
     
 
 class FollowHandle():
-    dataType = TypedDict('dataType', {'client': User, 'account': User})
+    dataType = TypedDict('dataType', {'client': User, 'clicked_account': User})
     
     # フォローしていたときの処理
     def delete_followfunc(data: dataType):
-        follow = get_object_or_404(FollowModel, following_user=data['client'], follower_user=data['account'])
+        follow = get_object_or_404(FollowModel, following_user=data['client'], follower_user=data['clicked_account'])
         follow.delete()
 
     # フォローしていなかったときの処理
     def create_followfunc(data: dataType):
-        FollowModel.objects.create(following_user=data['client'], follower_user=data['account'])
+        FollowModel.objects.create(following_user=data['client'], follower_user=data['clicked_account'])

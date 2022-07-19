@@ -7,5 +7,5 @@ app_name = 'accounts'
 urlpatterns = [
     path('signup/', signupfunc, name='signup'),
     path('profile/<int:user_pk>', profilefunc, name='profile'),
-    path('follow', followfunc, name='follow'),
+    path('follow/', followfunc, name='follow'),
 ]
