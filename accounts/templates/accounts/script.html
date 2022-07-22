@@ -13,7 +13,7 @@
   // csrf_token取得
   const csrfToken = fetchCookie("csrftoken");
 
-  // いいねボタンのスタイルを変更
+  // フォローボタンのスタイルを変更
   const changeFollowButtonStyles = (jsonResponse) => {
     //　今回はクラス名の変更
     const followButtonIcon = document.getElementsByName("followIcon")[0];
@@ -44,11 +44,10 @@
     }
   };
 
-  // いいねボタンがクリックされたときの挙動
+  // フォローボタンがクリックされたときの挙動
   async function followButtonClicked(event) {
     event.preventDefault();
     const postBody = {
-      client_pk: this.getAttribute("client"),
       account_pk: this.getAttribute("account"),
     };
     const postData = {

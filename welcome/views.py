@@ -7,11 +7,11 @@ from django.contrib.auth.decorators import login_required
 # Create your views here.
 
 
-def welcomefunc(request):
+def welcome_func(request):
     return render(request, 'welcome/welcome.html')
 
 
-def loginfunc(request):
+def login_func(request):
     if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
@@ -26,6 +26,6 @@ def loginfunc(request):
 
 
 @login_required
-def logoutfunc(request):
+def logout_func(request):
     logout(request)
     return redirect('welcome:login')

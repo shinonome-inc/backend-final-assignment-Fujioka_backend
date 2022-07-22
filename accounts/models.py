@@ -9,5 +9,5 @@ class User(AbstractUser):
 
 
 class FollowModel(models.Model):
-    following_user = models.ForeignKey(User, on_delete=models.CASCADE, null=False, related_name='following_user')
-    follower_user = models.ForeignKey(User, on_delete=models.CASCADE, null=False, related_name='follower_user')
+    following_user = models.ForeignKey(User, on_delete=models.CASCADE, null=False, related_name='following_user', unique=True)
+    follower_user = models.ForeignKey(User, on_delete=models.CASCADE, null=False, related_name='follower_user', unique=True)

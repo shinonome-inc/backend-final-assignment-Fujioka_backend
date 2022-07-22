@@ -1,7 +1,7 @@
 import json
 from typing import TypedDict
 from django.http import JsonResponse
-from django.shortcuts import get_list_or_404, get_object_or_404, render
+from django.shortcuts import get_object_or_404, render
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
@@ -12,7 +12,7 @@ from tweets.models import TweetModel
 from .forms import CreateForm
 
 
-def signupfunc(request):
+def signup_func(request):
     if request.method == 'POST':
         form = CreateForm(request.POST)
         if form.is_valid():
@@ -28,32 +28,29 @@ def signupfunc(request):
 
 
 @login_required
-def profilefunc(request, user_pk):
+def profile_func(request, user_pk):
     # 使用しているユーザと、クリックされたユーザを取得
     client_user = request.user
-    clicked_account = get_object_or_404(User, pk=user_pk)
+    profile_user = get_object_or_404(User, pk=user_pk)
     # これらのユーザが同一人物家を確認
-    is_same_user: bool = True if client_user == clicked_account else False
+    is_same_user: bool = client_user == profile_user
     
     # フォローしているかの確認
-    follow_detecting = False
-    if (is_same_user == False) :
-        follow_detecting = True if clicked_account.pk in client_user.following_user.values_list('follower_user', flat=True) else False
-    
+    is_followed = FollowModel.objects.filter(following_user=client_user, follower_user=profile_user).exists()
 
     # ツイートの取得
-    user_tweets = TweetModel.objects.filter(author=clicked_account).order_by('created_date').reverse().all()
+    user_tweets = TweetModel.objects.filter(author=profile_user).order_by('created_date').reverse().all()
     tweets_exist = True if user_tweets else False
 
     # いいねしているツイートの取得
     liked_tweets = request.user.likemodel_set.values_list('tweet', flat=True)
 
     context = {
-        'clicked_account': clicked_account,
+        'profile_user': profile_user,
         'user_tweets': user_tweets,
         'tweets_exist': tweets_exist,
         'is_same_user': is_same_user,
-        'follow_detecting': follow_detecting,
+        'is_followed': is_followed,
         'liked_tweets': liked_tweets,
     }
 
@@ -61,47 +58,74 @@ def profilefunc(request, user_pk):
 
 
 @login_required
-def followfunc(request):
+def follow_func(request):
     # JSからのPOST受け取り
     if request.method == 'POST':
         json_body = request.body.decode("utf-8")
         body = json.loads(json_body)
         # postの中に適切なデータが入っているか確認
-        if body['client_pk'] and body['account_pk'] and body['client_pk'] != body['account_pk']:
-            client = get_object_or_404(User, pk=body['client_pk'])
-            clicked_account = get_object_or_404(User, pk=body['account_pk'])
+        if body['account_pk'] :
+            client = request.user
+            profile_user = get_object_or_404(User, pk=body['account_pk'])
+            # 自分自身へのフォローではないか
+            if client != profile_user :
+                # フォローしているかの再確認
+                is_followed = profile_user.pk in client.following_user.values_list('follower_user', flat=True)
+
+                dataType = TypedDict('dataType', {'client': User, 'profile_user': User})
+                data: dataType = dict(client = client, profile_user = profile_user)
+                # フォローしていたときの処理
+                if is_followed:
+                    FollowHandle.delete_follow_func(data)
+                # フォローしていなかったときの処理
+                else:
+                    FollowHandle.create_follow_func(data)
+
+                context = {
+                    'is_followed': not is_followed,
+                    'follower_number': profile_user.follower_user.count(),
+                }
+                return JsonResponse(context)
             
-            # フォローしているかの再確認
-            is_followed = True if clicked_account.pk in client.following_user.values_list('follower_user', flat=True) else False
-
-            dataType = TypedDict('dataType', {'client': User, 'clicked_account': User})
-            data: dataType = dict(client = client, clicked_account = clicked_account)
-            # フォローしていたときの処理
-            if is_followed:
-                FollowHandle.delete_followfunc(data)
-            # フォローしていなかったときの処理
             else:
-                FollowHandle.create_followfunc(data)
-
-            context = {
-                'is_followed': not is_followed,
-                'follower_number': clicked_account.follower_user.count(),
-            }
-            return JsonResponse(context)
-        
+                # 自分自身へのフォローをしようとしたときのエラーハンドリング
+                return JsonResponse({})
         else:
             # postの内容物が揃っていなかったときのエラーハンドリング
             return JsonResponse({})
     
 
 class FollowHandle():
-    dataType = TypedDict('dataType', {'client': User, 'clicked_account': User})
+    dataType = TypedDict('dataType', {'client': User, 'profile_user': User})
     
     # フォローしていたときの処理
-    def delete_followfunc(data: dataType):
-        follow = get_object_or_404(FollowModel, following_user=data['client'], follower_user=data['clicked_account'])
+    def delete_follow_func(data: dataType):
+        follow = get_object_or_404(FollowModel, following_user=data['client'], follower_user=data['profile_user'])
         follow.delete()
 
     # フォローしていなかったときの処理
-    def create_followfunc(data: dataType):
-        FollowModel.objects.create(following_user=data['client'], follower_user=data['clicked_account'])
+    def create_follow_func(data: dataType):
+        FollowModel.objects.create(following_user=data['client'], follower_user=data['profile_user'])
+
+
+@login_required
+def display_following_func(request, user_pk):
+    profile_user = get_object_or_404(User, pk=user_pk)
+    follow_model_including_following_user = FollowModel.objects.filter(following_user=profile_user)
+    following_user_list = list(map(lambda follow_model: get_object_or_404(User, pk=follow_model.follower_user_id), follow_model_including_following_user))
+    context = {
+        'profile_user': profile_user,
+        'following_user_list': following_user_list,
+    }
+    return render(request, 'accounts/following.html', context)
+
+@login_required
+def display_follower_func(request, user_pk):
+    profile_user = get_object_or_404(User, pk=user_pk)
+    follow_model_including_follower_user = FollowModel.objects.filter(follower_user=profile_user)
+    follower_user_list = list(map(lambda follow_model: get_object_or_404(User, pk=follow_model.following_user_id), follow_model_including_follower_user))
+    context = {
+        'profile_user': profile_user,
+        'follower_user_list': follower_user_list,
+    }
+    return render(request, 'accounts/follower.html', context)
