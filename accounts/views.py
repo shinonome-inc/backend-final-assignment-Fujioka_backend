@@ -30,17 +30,17 @@ def signup_func(request):
 @login_required
 def profile_func(request, user_pk):
     # 使用しているユーザと、クリックされたユーザを取得
-    client_user = request.user
+    request_user = request.user
     profile_user = get_object_or_404(User, pk=user_pk)
     # これらのユーザが同一人物家を確認
-    is_same_user: bool = client_user == profile_user
+    is_same_user: bool = request_user == profile_user
     
     # フォローしているかの確認
-    is_followed = FollowModel.objects.filter(following_user=client_user, follower_user=profile_user).exists()
+    is_followed = FollowModel.objects.filter(following_user=request_user, follower_user=profile_user).exists()
 
     # ツイートの取得
     user_tweets = TweetModel.objects.filter(author=profile_user).order_by('created_date').reverse().all()
-    tweets_exist = True if user_tweets else False
+    tweets_exist = user_tweets.exists()
 
     # いいねしているツイートの取得
     liked_tweets = request.user.likemodel_set.values_list('tweet', flat=True)
@@ -65,15 +65,15 @@ def follow_func(request):
         body = json.loads(json_body)
         # postの中に適切なデータが入っているか確認
         if body['account_pk'] :
-            client = request.user
+            request_user = request.user
             profile_user = get_object_or_404(User, pk=body['account_pk'])
             # 自分自身へのフォローではないか
-            if client != profile_user :
+            if request_user != profile_user :
                 # フォローしているかの再確認
-                is_followed = profile_user.pk in client.following_user.values_list('follower_user', flat=True)
+                is_followed = profile_user.pk in request_user.following_user.values_list('follower_user', flat=True)
 
-                dataType = TypedDict('dataType', {'client': User, 'profile_user': User})
-                data: dataType = dict(client = client, profile_user = profile_user)
+                dataType = TypedDict('dataType', {'request_user': User, 'profile_user': User})
+                data: dataType = dict(request_user = request_user, profile_user = profile_user)
                 # フォローしていたときの処理
                 if is_followed:
                     FollowHandle.delete_follow_func(data)
@@ -96,16 +96,16 @@ def follow_func(request):
     
 
 class FollowHandle():
-    dataType = TypedDict('dataType', {'client': User, 'profile_user': User})
+    dataType = TypedDict('dataType', {'request_user': User, 'profile_user': User})
     
     # フォローしていたときの処理
     def delete_follow_func(data: dataType):
-        follow = get_object_or_404(FollowModel, following_user=data['client'], follower_user=data['profile_user'])
+        follow = get_object_or_404(FollowModel, following_user=data['request_user'], follower_user=data['profile_user'])
         follow.delete()
 
     # フォローしていなかったときの処理
     def create_follow_func(data: dataType):
-        FollowModel.objects.create(following_user=data['client'], follower_user=data['profile_user'])
+        FollowModel.objects.create(following_user=data['request_user'], follower_user=data['profile_user'])
 
 
 @login_required
