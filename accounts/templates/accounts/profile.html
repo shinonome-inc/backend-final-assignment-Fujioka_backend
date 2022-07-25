@@ -50,7 +50,7 @@
             {% endif %} 
           </ul>
     </div>
-    {%if tweets_exist%}
+    {%if is_tweets_exist%}
         {% for tweet in user_tweets %}
             <div class="alert alert-light  pt-0 pb-0" role='alert'>
                 {% include 'tweets/atweet.html' %}

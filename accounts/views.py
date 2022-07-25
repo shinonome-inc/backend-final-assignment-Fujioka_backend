@@ -40,7 +40,7 @@ def profile_func(request, user_pk):
 
     # ツイートの取得
     user_tweets = TweetModel.objects.filter(author=profile_user).order_by('created_date').reverse().all()
-    tweets_exist = user_tweets.exists()
+    is_tweets_exist = user_tweets.exists()
 
     # いいねしているツイートの取得
     liked_tweets = request.user.likemodel_set.values_list('tweet', flat=True)
@@ -48,7 +48,7 @@ def profile_func(request, user_pk):
     context = {
         'profile_user': profile_user,
         'user_tweets': user_tweets,
-        'tweets_exist': tweets_exist,
+        'is_tweets_exist': is_tweets_exist,
         'is_same_user': is_same_user,
         'is_followed': is_followed,
         'liked_tweets': liked_tweets,
