@@ -14,12 +14,12 @@ from tweets.models import TweetModel, LikeModel
 
 
 @login_required
-def testfunc(request):
+def test_func(request):
     return render(request, 'tweets/test.html')
 
 
 @login_required
-def listfunc(request):
+def list_func(request):
     tweet_list = TweetModel.objects.order_by('created_date').reverse().all()
     
     # tweet_listのなかに、ユーザーが既にいいねを押したツイートを選別する
@@ -44,20 +44,23 @@ class TweetCreate(LoginRequiredMixin, CreateView):
     
     
 @login_required
-def detailfunc(request, pk):
+def detail_func(request, pk):
     client_user = request.user
     tweet = get_object_or_404(TweetModel, pk=pk)
     author = tweet.author
     identity = True if client_user == author else False
+    liked_tweets = request.user.likemodel_set.values_list('tweet', flat=True)
+    
     context = {
         'tweet': tweet,
         'identity': identity,
+        'liked_tweets': liked_tweets,
     }
     return render(request, 'tweets/detail.html', context)
 
 
 @login_required
-def delete_confirmfunc(request, pk):
+def delete_confirm_func(request, pk):
     client_user = request.user
     author = get_object_or_404(TweetModel, pk=pk).author
     if client_user == author:
@@ -77,7 +80,7 @@ class TweetDelete(LoginRequiredMixin, UserPassesTestMixin,  DeleteView):
 
 
 @login_required
-def likefunc(request):
+def like_func(request):
     # Django Database 関連の処理
     # POST送信かを確認
     if request.method == 'POST' :
@@ -99,10 +102,10 @@ def likefunc(request):
             # それ以外の処理はLikeHnadleに記載する
             if like.exists():
                 # いいね解除の処理
-                is_liked = LikeHandle.deletelikefunc(data)
+                is_liked = LikeHandle.deletelike_func(data)
             else:
                 # いいね作成の処理
-                is_liked = LikeHandle.createlikefunc(data)
+                is_liked = LikeHandle.createlike_func(data)
                 
             context = {
                 'tweet_pk': tweet.pk,
@@ -114,17 +117,18 @@ def likefunc(request):
         
         else:
             # postの内容物のエラーハンドリング
-            pass
+            return JsonResponse({})
 
 class LikeHandle():
+    dataType = TypedDict('dataType', {'tweet': TweetModel, 'user': Any, 'is_liked': bool, 'like': Any})
     
     # いいね解除の処理
-    def deletelikefunc(data):
+    def deletelike_func(data: dataType):
         data['like'].delete()
         return data['is_liked']
     
     # いいね作成の処理
-    def createlikefunc(data):
+    def createlike_func(data: dataType):
         data['like'].create(tweet = data['tweet'], user = data['user'])
         data['is_liked'] = True
         return data['is_liked']

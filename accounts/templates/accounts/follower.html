@@ -1,0 +1,27 @@
+{% extends 'tweets/base.html' %}
+
+{% block header %}
+{% include 'tweets/header.html' %}
+{% endblock header %}
+
+
+{% block content %}
+{% if user.is_authenticated %}
+
+<div class="container">
+    <a class="btn-close m-2" href={% url 'accounts:profile' profile_user.pk %} role="button" type='button'></a>
+    <div class="alert alert-light" role="alert">
+        <p class="fs-1 mx-4">{{profile_user.username}} - Following</p>
+        {% for follower_user in follower_user_list %}
+            <div class="alert alert-light  pt-0 pb-0" role='alert'>
+                <a href={%url 'accounts:profile' follower_user.pk%} class="nav-link">
+                    <p class="fs-5 text-decoration-none">> {{follower_user.username}}</p>
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<a href="{% url 'login' %}">please login</a>
+{% endif %}
+{% endblock content %}

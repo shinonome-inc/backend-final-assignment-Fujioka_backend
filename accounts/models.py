@@ -1,6 +1,5 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.core.mail import send_mail
 
 
 class User(AbstractUser):
@@ -9,5 +8,16 @@ class User(AbstractUser):
         swappable = "AUTH_USER_MODEL"
 
 
-class FriendShip(models.Model):
-    pass
+class FollowModel(models.Model):
+    following_user = models.ForeignKey(
+        User, on_delete=models.CASCADE, null=False, related_name='following_user')
+    follower_user = models.ForeignKey(
+        User, on_delete=models.CASCADE, null=False, related_name='follower_user')
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['following_user', 'follower_user'],
+                name='follow_combination'
+            ),
+        ]

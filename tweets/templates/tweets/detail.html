@@ -10,19 +10,7 @@
 
 <div class="container">
     <div class="alert alert-light  pt-0 pb-0" role='alert'>
-        {% comment %} <a href={%url 'accounts:profile' tweet.author%} class="nav-link"> {% endcomment %}
-        <a href='#' class="nav-link">
-            <p class="fs-5 text-decoration-none">> {{tweet.author}}</p>
-        </a>
-        <a href="{%url 'tweets:detail' tweet.pk%}" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
-           <svg class="bi me-2" width="40" height="32"><use xlink:href="#bootstrap"/></svg>
-            <span class="fs-6 pb-3">{{tweet.text}}</span>
-        </a>
-
-        <div class="like-outer">
-            {% include 'tweets/like.html' %}
-        </div>
-
+        {% include 'tweets/atweet.html' %}
         {% if identity %}
         <a href="{%url 'tweets:delete_confirm' tweet.pk%}" class="text-decoration-none ms-5">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">

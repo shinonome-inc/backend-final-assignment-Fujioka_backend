@@ -1,11 +1,12 @@
+import json
 from django.test import TestCase, Client
 from django.urls import reverse, resolve
 from django.contrib.auth import SESSION_KEY
 
-from welcome.views import loginfunc
+from welcome.views import login_func
 
-from .models import User
-from .views import signupfunc
+from .models import FollowModel, User
+from .views import signup_func
 
 
 class TestSignUpView(TestCase):
@@ -17,7 +18,7 @@ class TestSignUpView(TestCase):
         self.password = 'watasihatestpassworddesu'
 
     def test_success_get(self):
-        self.assertEqual(resolve(self.signup_url).func, signupfunc)
+        self.assertEqual(resolve(self.signup_url).func, signup_func)
         response = self.client.get(self.signup_url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'accounts/signup.html')
@@ -164,7 +165,7 @@ class TestLoginView(TestCase):
         self.client.logout()
 
     def test_success_get(self):
-        self.assertEqual(resolve(self.login_url).func, loginfunc)
+        self.assertEqual(resolve(self.login_url).func, login_func)
         response = self.client.get(self.login_url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'welcome/login.html')
@@ -244,7 +245,18 @@ class TestLogoutView(TestCase):
 
 class TestUserProfileView(TestCase):
     def test_success_get(self):
-        pass
+        self.client = Client()
+        self.username = 'testuser'
+        self.password = 'testpassword'
+        self.accounts_url = reverse('accounts:profile', kwargs={'user_pk': 1})
+
+        # テストユーザーを作る
+        self.client.force_login(User.objects.create_user(
+            self.username, '', self.password))
+        self.user = User.objects.get(username=self.username)
+
+        response = self.client.get(self.accounts_url)
+        self.assertEqual(response.status_code, 200)
 
 
 class TestUserProfileEditView(TestCase):
@@ -262,32 +274,142 @@ class TestUserProfileEditView(TestCase):
 
 
 class TestFollowView(TestCase):
+    def setUp(self):
+        self.client = Client()
+        # ユーザー1
+        self.username = 'testuser'
+        self.password = 'testpassword'
+        # ユーザー2
+        self.username2 = 'bobobo-bobobo-bobo'
+        self.password2 = 'hanagedaimajinn'
+
+        self.accounts_url = reverse('accounts:profile', kwargs={'user_pk': 2})
+        self.follow_url = reverse('accounts:follow')
+
+        # テストユーザーを作る
+        # ユーザー2
+        self.client.force_login(User.objects.create_user(
+            self.username2, '', self.password2))
+        self.user = User.objects.get(username=self.username2)
+        # ユーザー1
+        self.client.force_login(User.objects.create_user(
+            self.username, '', self.password))
+        self.user = User.objects.get(username=self.username)
+
+        # POST用のJsonデータ
+        post_obj = {'account_pk': User.objects.get(username=self.username2).pk}
+        self.json = json.dumps(post_obj)
+
     def test_success_post(self):
-        pass
+        request =  self.client.post(self.follow_url, self.json,
+                         content_type="application/json")
+        self.assertTrue(FollowModel.objects.exists())
+        self.assertEqual(request.status_code, 200)
 
     def test_failure_post_with_not_exist_user(self):
-        pass
+        post_obj = {'account_pk': User.objects.get(username=self.username2).pk+20}
+        request = self.client.post(self.follow_url, json.dumps(post_obj),
+                         content_type="application/json")
+        self.assertFalse(FollowModel.objects.exists())  
+        self.assertEqual(request.status_code, 404)
 
     def test_failure_post_with_self(self):
-        pass
+        post_obj = {'account_pk': User.objects.get(username=self.username).pk}
+        request = self.client.post(self.follow_url, json.dumps(post_obj),
+                         content_type="application/json")
+        self.assertFalse(FollowModel.objects.exists())  
+        self.assertEqual(request.status_code, 200)         
 
 
 class TestUnfollowView(TestCase):
+    def setUp(self):
+        self.client = Client()
+        # ユーザー1
+        self.username = 'testuser'
+        self.password = 'testpassword'
+        # ユーザー2
+        self.username2 = 'bobobo-bobobo-bobo'
+        self.password2 = 'hanagedaimajinn'
+
+        self.accounts_url = reverse('accounts:profile', kwargs={'user_pk': 2})
+        self.follow_url = reverse('accounts:follow')
+
+        # テストユーザーを作る
+        # ユーザー2
+        self.client.force_login(User.objects.create_user(
+            self.username2, '', self.password2))
+        self.user = User.objects.get(username=self.username2)
+        # ユーザー1
+        self.client.force_login(User.objects.create_user(
+            self.username, '', self.password))
+        self.user = User.objects.get(username=self.username)
+
+        # POST用のJsonデータ
+        post_obj = {'account_pk': User.objects.get(username=self.username2).pk}
+        self.json = json.dumps(post_obj)
+        
+        # フォローする
+        self.client.post(self.follow_url, self.json,
+                         content_type="application/json")
+        self.assertTrue(FollowModel.objects.exists())
+    
     def test_success_post(self):
-        pass
+        request = self.client.post(self.follow_url, self.json,
+                         content_type="application/json")
+        self.assertFalse(FollowModel.objects.exists())
+        self.assertTrue(request.status_code, 200)
 
     def test_failure_post_with_not_exist_tweet(self):
-        pass
+        post_obj = {'account_pk': User.objects.get(username=self.username2).pk+20}
+        request = self.client.post(self.follow_url, json.dumps(post_obj),
+                         content_type="application/json")
+        self.assertTrue(FollowModel.objects.exists())  
+        self.assertEqual(request.status_code, 404)
 
     def test_failure_post_with_incorrect_user(self):
-        pass
+        post_obj = {'account_pk': User.objects.get(username=self.username).pk}
+        request = self.client.post(self.follow_url, json.dumps(post_obj),
+                         content_type="application/json")
+        self.assertTrue(FollowModel.objects.exists())  
+        self.assertEqual(request.status_code, 200)         
+
 
 
 class TestFollowingListView(TestCase):
+    def setUp(self):
+        self.client = Client()
+        # ユーザー1
+        self.username = 'testuser'
+        self.password = 'testpassword'
+
+        self.display_following_url = reverse('accounts:display_following', kwargs={'user_pk': 1})
+
+        # テストユーザーを作る
+        # ユーザー1
+        self.client.force_login(User.objects.create_user(
+            self.username, '', self.password))
+        self.user = User.objects.get(username=self.username)
+        
     def test_success_get(self):
-        pass
+        response = self.client.get(self.display_following_url)
+        self.assertEqual(response.status_code, 200)
 
 
 class TestFollowerListView(TestCase):
+    def setUp(self):
+        self.client = Client()
+        # ユーザー1
+        self.username = 'testuser'
+        self.password = 'testpassword'
+
+        self.display_follower_url = reverse('accounts:display_follower', kwargs={'user_pk': 1})
+
+        # テストユーザーを作る
+        # ユーザー1
+        self.client.force_login(User.objects.create_user(
+            self.username, '', self.password))
+        self.user = User.objects.get(username=self.username)
+
     def test_success_get(self):
-        pass
+        response = self.client.get(self.display_follower_url)
+        self.assertEqual(response.status_code, 200)
